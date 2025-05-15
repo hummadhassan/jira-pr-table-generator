@@ -1,0 +1,67 @@
+﻿@page
+@model JiraFixModel
+@{
+    ViewData["Title"] = "Jira Fix Version → PR Table";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form method="get" class="mb-4">
+  <div class="mb-2">
+    <label>Fix Version</label>
+    <input asp-for="FixVersion" class="form-control" />
+  </div>
+  <div class="mb-2">
+    <label>Jira Project Key (override)</label>
+    <input asp-for="ProjectKeyOverride" class="form-control" />
+    <small class="text-muted">Default: @Model._jiraSettings.ProjectKey</small>
+  </div>
+
+  @if(Model._devOpsSettings.Enabled){
+      <div class="mb-2">
+        <label>Azure Devops Project Key (override)</label>
+        <input asp-for="AzureProjectKeyOverride" class="form-control" />
+        <small class="text-muted">Default: @Model._devOpsSettings.Project</small>
+      </div>
+  }  
+  
+  <button type="submit" class="btn btn-primary">Fetch Tickets</button>
+</form>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+else if (Model.Tickets?.Any() == true)
+{
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th width="100">Ticket #</th>
+              <th>Title</th>
+              <th>Pull Requests</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var t in Model.Tickets)
+            {
+                <tr>
+                  <td>@t.Key</td>
+                  <td>@t.Title</td>
+                  <td>
+                        @foreach (var url in t.PullRequestUrls)
+                        {
+                          <a href="@url" target="_blank">@url</a>
+
+                            <br />
+                        }
+                  </td>
+                </tr>
+            }
+          </tbody>
+        </table>
+}
+else if (!String.IsNullOrWhiteSpace(Model.FixVersion))
+{
+        <p>No tickets with PRs found under fix version “@Model.FixVersion”.</p>
+}
